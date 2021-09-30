@@ -4,6 +4,9 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class AC : MonoBehaviour
 {
@@ -25,14 +28,14 @@ public class AC : MonoBehaviour
 
     //Mouse Var´s
     static bool isMouseLeft, isMouseRight, isMouseMiddel, MouseLeft_Down, MouseRight_Down, MouseMiddel_Down, MouseLeft_Up, MouseRight_Up, MouseMiddel_Up;
-    static Vector2 Mouse_Position;
+    static Vector2 Mouse_Position,Mouse_Delta;
     static float Mouse_Wheel;
 
     //Keyboard
     static Keyboard aKey;
 
 
-    public bool DebugMouse,DebugPosition,DebugKeyboard;
+    public bool DebugMouse=false,DebugPosition=false, DebugDelta=false, DebugKeyboard = false ;
 
     private void Awake()
     {
@@ -136,6 +139,7 @@ public class AC : MonoBehaviour
         a.Mouse.MiddelButton.canceled += ctx => MouseMiddel_Up = true;
 
         a.Mouse.Position.performed += ctx => Mouse_Position = ctx.ReadValue<Vector2>();
+        a.Mouse.Delta.performed += ctx => Mouse_Delta = ctx.ReadValue<Vector2>();
 
         a.Mouse.Wheel.performed += ctx => Mouse_Wheel = ctx.ReadValue<float>();
         a.Mouse.Wheel.canceled += ctx => Mouse_Wheel = 0;
@@ -691,6 +695,29 @@ public class AC : MonoBehaviour
     {
         return Mouse_Position;
     }
+    public static Vector2 MouseDelta()
+    {
+        return Mouse_Delta;
+    }
+
+    /// <summary>
+    /// return the horzontal delta 
+    /// </summary>
+    /// <returns></returns>
+    public static float Mouse_X()
+    {
+        return Mouse_Delta.x;
+    }
+
+    /// <summary>
+    /// return the vertical delta
+    /// </summary>
+    /// <returns></returns>
+    public static float Mouse_Y()
+    {
+        return Mouse_Delta.y;
+    }
+
 
     public static float MouseWheel()
     {
@@ -751,6 +778,11 @@ public class AC : MonoBehaviour
                 Debug.Log("Mouse X = "+ MousePosition().x + "  Mouse Y = "+ MousePosition().y);
             }
 
+            if (DebugDelta)
+            {
+                Debug.Log("Mouse X = " + MouseDelta().x + "  Mouse Y = " + MouseDelta().y);
+            }
+
             Debug.Log("Wheel Value" + MouseWheel());
         }
 
@@ -762,4 +794,73 @@ public class AC : MonoBehaviour
             
         }
     }
+
+
+
 }
+
+#if UNITY_EDITOR
+[CustomEditor(typeof(AC))]
+public class customInspecterEZ : Editor
+{
+    Texture2D icon;
+
+    public override void OnInspectorGUI()
+    {
+        if(icon == null)
+        {
+            icon = AssetDatabase.LoadAssetAtPath("Assets/EZ-Inputs/Textures/icon.png", typeof(Texture2D)) as Texture2D;
+        }
+
+        GUI.DrawTexture(new Rect(0, 0, EditorGUIUtility.currentViewWidth, EditorGUIUtility.singleLineHeight * 6), icon);
+        EditorStyles.label.richText = true;
+        EditorStyles.label.fontStyle = FontStyle.Bold;
+        AC a = (AC)target;
+
+        EditorGUI.DrawRect(new Rect(5, 5, 200, EditorGUIUtility.singleLineHeight * 5), new Color(1,1,1, 0.5f));
+
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField(a.DebugMouse ? "<color=Black> Debug Mouse Inputs</color>" : "<color=grey> Debug Mouse Inputs</color>");
+        if(GUILayout.Button(a.DebugMouse ? "Its Active" : "Not Active"))
+        {
+            a.DebugMouse = !a.DebugMouse;
+        }
+        EditorGUILayout.EndHorizontal();
+
+
+        if (a.DebugMouse)
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(a.DebugPosition ? "<color=Black> Debug Mouse Position</color>" : "<color=grey> Debug Mouse Position</color>");
+            if (GUILayout.Button(a.DebugPosition ? "Its Active" : "Not Active"))
+            {
+                a.DebugPosition = !a.DebugPosition;
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(a.DebugDelta ? "<color=Black> Debug Mouse Delta</color>" : "<color=grey> Debug Mouse Delta</color>");
+            if (GUILayout.Button(a.DebugDelta ? "Its Active" : "Not Active"))
+            {
+                a.DebugDelta = !a.DebugDelta;
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
+        }
+
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField(a.DebugKeyboard ? "<color=black> Debug Keyboard Inputs</color>" : "<color=grey> Debug Keyborad Inputs</color>");
+        if (GUILayout.Button(a.DebugKeyboard ? "Its Active" : "Not Active"))
+        {
+            a.DebugKeyboard = !a.DebugKeyboard;
+        }
+        EditorGUILayout.EndHorizontal();
+
+
+       if(!a.DebugMouse) GUILayout.Space(60);
+
+        // DrawDefaultInspector();
+    }
+
+}
+#endif

@@ -1,0 +1,4 @@
+Update infos 
+
+1.Input system kann über das Menü eingefügt werden Azes/Input Ez Input
+2.mehr static funktionen / mehr input möglichkeiten 
