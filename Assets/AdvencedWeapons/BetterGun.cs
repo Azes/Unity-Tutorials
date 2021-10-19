@@ -23,12 +23,13 @@ public class BetterGun : MonoBehaviour
     public Vector2 normalSpreadMinMax;
     public GameObject kugel;
     public float Power;
-    //public float shootAngle;
-    //public AudioClip[] angleSounds;
+    public float shootAngle = 2;
+    public bool vollmantel;
+    public LayerMask wallLayer;
 
-    //[Header("pumgun")]
-    bool isPump;
-    int schrots;
+   [Header("pumgun")]
+   public bool isPump;
+   public int schrots;
 
     RaycastHit hit;
 
@@ -74,17 +75,31 @@ public class BetterGun : MonoBehaviour
                 }
                 Ray r = cam.ScreenPointToRay(pos);
 
-                if (Physics.Raycast(r, out hit, shootRange))
+                if (vollmantel) BulletDrop = false;
+
+                if ((vollmantel ? Physics.Raycast(r, out hit, shootRange, ~wallLayer) :
+                    Physics.Raycast(r, out hit, shootRange)))
                 {
+
+                    float cosine = Vector3.Dot(r.direction, hit.normal);
+                    float cosineDegees = Mathf.Acos(cosine);
+
                     ///debug
                     end = hit.point;
                     ///
 
                     if (hit.collider != null)
                     {
-                        Instantiate(BulletHole, hit.point, Quaternion.FromToRotation(Vector3.forward, hit.normal));
+                        GameObject h = Instantiate(BulletHole, hit.point, Quaternion.FromToRotation(Vector3.forward, hit.normal));
 
-                        if (hit.collider.CompareTag("Enemy")) hit.collider.GetComponent<SimpleEnemy>().setDamage(Damage);
+                        if (cosineDegees > shootAngle) h.GetComponent<Bullethole>().hitten = true;
+                        else h.GetComponent<Bullethole>().hitten = false;
+
+                        if (hit.collider.CompareTag("Enemy"))
+                        {
+                            Destroy(h);
+                            hit.collider.GetComponent<SimpleEnemy>().setDamage(Damage);
+                        }
                     }
                 }
                 else
